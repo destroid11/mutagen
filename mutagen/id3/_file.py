@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (C) 2005  Michael Urman
 #               2006  Lukas Lalinsky
 #               2013  Christoph Reiter
@@ -141,6 +142,8 @@ class ID3(ID3Tags, mutagen.Metadata):
         if v2_version not in (3, 4):
             raise ValueError("Only 3 and 4 possible for v2_version")
 
+        self.id3v1_present = False
+
         self.unknown_frames = []
         self._header = None
         self._padding = 0
@@ -157,7 +160,8 @@ class ID3(ID3Tags, mutagen.Metadata):
             if frames is None:
                 raise
 
-            self.version = ID3Header._V11
+            self.version = ID3Header._V11   
+            self.id3v1_present = True
             for v in frames.values():
                 if len(self.getall(v.HashKey)) == 0:
                     self.add(v)
@@ -174,6 +178,7 @@ class ID3(ID3Tags, mutagen.Metadata):
                 v1v2_ver = 4 if self.version[1] == 4 else 3
                 frames, offset = find_id3v1(fileobj, v1v2_ver, known_frames)
                 if frames:
+                    self.id3v1_present = True
                     for v in frames.values():
                         if len(self.getall(v.HashKey)) == 0:
                             self.add(v)
