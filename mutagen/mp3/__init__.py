@@ -199,6 +199,11 @@ class MPEGFrame(object):
                     # older lame versions wrote bogus delay/padding for short
                     # files with low bitrate
                     samples = 0
+                else:
+                    if lame is not None:
+                        # make delay/padding available to MPEGInfo if not bogus
+                        self.encoder_delay_start = lame.encoder_delay_start
+                        self.encoder_padding_end = lame.encoder_padding_end
                 self.length = float(samples) / self.sample_rate
             if xing.lame_version_desc:
                 self.encoder_info = u"LAME %s" % xing.lame_version_desc
@@ -330,6 +335,8 @@ class MPEGInfo(StreamInfo):
     sketchy = False
     encoder_info = u""
     encoder_settings = u""
+    encoder_delay_start = 0
+    encoder_padding_end = 0
     bitrate_mode = BitrateMode.UNKNOWN
     track_gain = track_peak = album_gain = album_peak = None
 
