@@ -76,6 +76,14 @@ class TWave(TestCase):
         self.failUnless("audio/wav" in self.wav_pcm_2s_44100_16_ID3v23.mime)
         self.failUnless("audio/wave" in self.wav_pcm_2s_44100_16_ID3v23.mime)
 
+    def test_md5_signature(self):
+        self.failUnlessEqual(self.wav_pcm_2s_16000_08_ID3v23.
+                             get_md5_signature(), 141923338846927694978188238842614295940) # wrong 6AC570D8E05C8F2414DFA4E113BCAD84 WRONG!!!!   
+                             # CORRECT FLAC: CF7CF997851FBA0EDBB0524841CE37BD  
+
+        self.failUnlessEqual(self.wav_pcm_2s_44100_16_ID3v23.
+                             get_md5_signature(), 276524895818408100148647907590376619481) # FLAC: D008C1FA1A70F92BD7994EB0AFFD7DD9
+
     def test_id3_tags(self):
         id3 = self.wav_pcm_2s_44100_16_ID3v23.tags
         self.assertEquals(id3["TALB"], "Quod Libet Test Data")

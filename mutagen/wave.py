@@ -11,6 +11,7 @@
 
 import sys
 import struct
+from functools import reduce
 
 from mutagen import StreamInfo, FileType
 
@@ -158,6 +159,12 @@ def delete(filething):
         pass
 
 
+def to_int_be(data):
+    """Convert an arbitrarily-long string to a long using big-endian
+    byte order."""
+    return reduce(lambda a, b: (a << 8) + b, bytearray(data), 0)
+
+
 class WAVE(FileType):
     """WAVE(filething)
 
@@ -205,6 +212,49 @@ class WAVE(FileType):
             raise error(e)
         else:
             self.tags.filename = self.filename
+   
 
+    def get_md5_signature(self):
+        """Generate MD5 hash of the PCM audio data.
+           If transcoded to FLAC, natches the StreamInfo.md5_signature
+           TODO FLAC encodr uses some special 64 byte padding logic for the audio data that 
+           does not match the plain MD5
+        """
+        return self._audio_md5(self.filename)
+
+
+    @convert_error(IOError, error)
+    @loadfile()
+    def _audio_md5(self, filething):
+        """Load data chunk and get audio MD5"""
+
+        from hashlib import md5
+
+        fileobj = filething.fileobj
+        wave_file = _WaveFile(fileobj)
+  
+        try:
+            data_chunk = wave_file[u'data']
+        except KeyError as e:
+            raise error(str(e))
+
+        # Read from offset through size of data
+        fileobj.seek(data_chunk.data_offset)
+        remaining = data_chunk.data_size
+
+        hashmd5 = md5()
+        chunk = 4096
+        while remaining > 0:
+            pcm_data = fileobj.read(chunk)
+            remaining -= len(pcm_data)
+            if remaining < chunk:
+                chunk = remaining
+            hashmd5.update(pcm_data)
+        
+        if chunk == 0: 
+            hash_int = to_int_be(hashmd5.digest())
+            return hash_int
+
+        return 0
 
 Open = WAVE
